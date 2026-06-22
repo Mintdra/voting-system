@@ -1,57 +1,73 @@
-# Sample Hardhat 3 Project (`mocha` and `ethers`)
+1. Compile the Smart Contract
+Compile the Solidity code to generate the required network artifacts and ABI mappings:
 
-This project showcases a Hardhat 3 project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+npx hardhat compile
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+Deployment & Running Locally
+To deploy and test the contract locally, you will need two separate terminal windows open simultaneously.
 
-## Project Overview
+Step 1: Start the Local Blockchain Node
 
-This example project includes:
+Bash
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+npx hardhat node
 
-## Usage
+Leave this terminal running. Do not close it or execute other commands here.
 
-### Running Tests
+Step 2: Deploy the Contract
+Open a second terminal window, ensure you are in the project root directory, and run the deployment script targeting your local network:
 
-To run all the tests in the project, execute the following command:
+Bash
 
-```shell
-npx hardhat test
-```
+npx hardhat run scripts/deploy.js --network localhost
 
-You can also selectively run the Solidity or `mocha` tests:
+Upon completion, copy the printed deployment contract address (e.g., 0x5FbDB2315678afecb367f032d93F642f64180aa3).
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+Interactive Testing via Hardhat Console
+You can manually interact with your live local contract by launching the interactive JavaScript runtime console.
 
-### Make a deployment to Sepolia
+1. Launch the Console
+In your second terminal, execute:
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+Bash
 
-To run the deployment to a local chain:
+npx hardhat console --network localhost
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+2. Initialize the Contract Environment
+Inside the interactive prompt (>), paste the following initialization sequence to fetch the environment network context and attach your contract factory instance:
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+JavaScript
+// Establish network connection context
+const connection = await hre.network.create(); const { ethers } = connection;
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+// Load the Contract Factory
+const Voting = await ethers.getContractFactory("Voting");
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+// Attach to your deployed contract address (Replace with your actual address)
+const voting = await Voting.attach("YOUR_DEPLOYED_ADDRESS_HERE");
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
+3. Execution Commands & Interactions
 
-After setting the variable, you can run the deployment with the Sepolia network:
+Add Candidates (Restricted to Election Official)
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+JavaScript
+
+await voting.addCandidate("Alice");
+await voting.addCandidate("Bob");
+
+Cast a Vote (Account 1)
+JavaScript
+
+await voting.vote(1);
+
+Verify Vote Count Results
+JavaScript
+
+(await voting.getVotes(1)).toString(); // Returns '1'
+
+Testing Validation 
+JavaScript
+
+await voting.vote(1); Return Error with a message "You have already voted"
+or 
+await voting.vote(2); same thing as the above
